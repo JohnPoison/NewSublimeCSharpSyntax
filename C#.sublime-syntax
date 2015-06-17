@@ -247,7 +247,7 @@ contexts:
           scope: punctuation.definition.seperator.parameter.source.cs
         - include: code
   variable-define:
-    - match: '([\w<>]+)\s+(\w+)\s*'
+    - match: '(?!float|var|event|delegate|add|remove|set|get|value|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|class|struct|enum|interface)([\w_<>]+)\s+([\w_]+)\s*(;|=)'
       scope: punctuation.definition.variable.parameter.source.cs
       captures:
         1: support.class.source.cs
