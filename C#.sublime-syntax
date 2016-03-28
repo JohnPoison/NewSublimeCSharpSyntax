@@ -255,10 +255,11 @@ contexts:
           scope: punctuation.definition.seperator.parameter.source.cs
         - include: code
   variable-define:
-    - match: '(?!float|var|event|delegate|add|remove|set|get|value|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|class|struct|enum|interface)([\w_<>]+)\s+([\w_]+)\s*(;|=)'
+    - match: '(?!float|var|event|delegate|add|remove|set|get|value|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|class|struct|enum|interface)([\w_]+)(<(.+)>)*\s+([\w_]+)\s*(;|=)'
       scope: punctuation.definition.variable.parameter.source.cs
       captures:
         1: support.class.source.cs
+        3: entity.name.class.source.cs
   parameters:
     - match: '\b(ref|params|out)?\s*\b([\w.\[\]<>]+)\s+(\w+)\s*(=)?'
       captures:
