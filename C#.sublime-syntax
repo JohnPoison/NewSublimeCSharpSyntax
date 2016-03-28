@@ -88,6 +88,10 @@ contexts:
     - include: variable-define
     - include: builtinTypes
     - include: dotCall
+  genericParameters:
+    - match: '<(.+)>'
+      captures:
+        1: entity.name.class.source.cs
   dotCall:
     - match: '(?<=\.)(\w+)'
       captures:
@@ -191,6 +195,7 @@ contexts:
             - meta_scope: support.class.source.cs
             - match: '(?=[\w.]+\s*\()'
               pop: true
+            - include: genericParameters
             - include: storage-modifiers
             - include: builtinTypes
         - match: ':\s*(this|base)\s*\('
