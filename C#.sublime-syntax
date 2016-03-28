@@ -239,12 +239,6 @@ contexts:
         3: support.class.source.cs
         4: punctuation.definition.method-parameters.begin.source.cs
       push:
-        - match: '<'
-          captures:
-            0: constant.language.source.cs
-          push:
-            - match: '>'
-              pop: true
         - meta_scope: meta.method-call.source.cs
         - match: \)
           captures:
