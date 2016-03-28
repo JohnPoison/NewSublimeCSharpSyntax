@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 # http://www.sublimetext.com/docs/3/syntax.html
-name: "C#"
+name: "C Sharp new"
 file_extensions:
   - cs
 scope: source.cs
@@ -233,11 +233,18 @@ contexts:
               pop: true
             - include: code
   method-call:
-    - match: '([\w<>$]+)(\()'
+    - match: '([\w<>$]+)(<(.+)>)(\()'
       captures:
         1: support.function.source.cs
-        2: punctuation.definition.method-parameters.begin.source.cs
+        3: support.class.source.cs
+        4: punctuation.definition.method-parameters.begin.source.cs
       push:
+        - match: '<'
+          captures:
+            0: constant.language.source.cs
+          push:
+            - match: '>'
+              pop: true
         - meta_scope: meta.method-call.source.cs
         - match: \)
           captures:
