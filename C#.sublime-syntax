@@ -84,14 +84,19 @@ contexts:
     - include: storage-modifiers
     - include: keywords
     - include: preprocessor
-    - include: method-call
     - include: variable-define
+    - include: method-call
     - include: builtinTypes
     - include: dotCall
+    - include: foreach
   genericParameters:
-    - match: '<(.+)>'
-      captures:
-        1: entity.name.class.source.cs
+    - match: '(?=<)'
+      push:
+        - meta_scope: entity.name.class.source.cs
+        - match: '(?=>)'
+          pop: true
+      # captures:
+      #   1: entity.name.class.source.cs
   dotCall:
     - match: '(?<=\.)(\w+)'
       captures:
@@ -151,6 +156,27 @@ contexts:
           pop: true
         - match: \\.
           scope: constant.character.escape.source.cs
+  foreach:
+    - match: '(?<=foreach)\s*\('
+      push:
+        - match: '(?={|;)'
+          pop: true
+        - include: code
+        - meta_scope: meta.foreach.header
+        - match: '(?=[\w.]+\s[\w.]+\sin)'
+          push:
+            - meta_scope: meta.foreach.header.variable.declaration
+            - match: '(in|{)'
+              captures:
+                0: keyword.control.source.cs
+              pop: true
+        - match: '(?<=in)'
+          push:
+            - meta_scope: container
+            - match: '(?=\))'
+              pop: true
+            - include: code
+        # - include: parameters
   keywords:
     - match: \b(if|else|while|for|foreach|in|do|return|continue|break|switch|case|default|goto|throw|try|catch|finally|lock|yield)\b
       scope: keyword.control.source.cs
@@ -175,14 +201,14 @@ contexts:
         - match: "(?={|;)"
           pop: true
         - include: code
-    - match: '(?!new)(?=[\w<].*\s+)(?=[^=]+\()'
+    - match: '(?!new)(?=[\w<>].*\s+)(?=[^=]+\()'
       push:
         - meta_scope: meta.method.source.cs
         - match: "(})|(?=;)"
           captures:
             1: punctuation.section.method.end.source.cs
           pop: true
-        - match: '([\w.]+)\s*\('
+        - match: '([\w.<>]+)\s*(?=\()'
           captures:
             1: entity.name.function.source.cs
           push:
@@ -190,12 +216,14 @@ contexts:
             - match: \)
               pop: true
             - include: parameters
-        - match: '(?=\w.*\s+[\w.]+\s*\()'
+        - match: '(?=[\w.]+(<[\w.<> ,]+>)*\s[\w.<>]+\s*\()'
           push:
             - meta_scope: support.class.source.cs
-            - match: '(?=[\w.]+\s*\()'
+            - match: '(<([\w.]+)>)*(?=\s[\w.]+(<[\w.]+>)*\s*\()'
+              captures:
+                1: keyword.other.source.cs
+                2: entity.name.class.source.cs
               pop: true
-            - include: genericParameters
             - include: storage-modifiers
             - include: builtinTypes
         - match: ':\s*(this|base)\s*\('
@@ -215,7 +243,9 @@ contexts:
               pop: true
             - include: code
         - include: storage-modifiers
-    - match: '(?!new)(?=[\w<].*\s+)(?=[^=]+\{)'
+        - include: builtinTypes
+    # - match: '(?!new)(?=[\w<]*.*\s+)(?=["^(=]+\{)'
+    - match: '(?!new)(?=[\w<]*[^(=]+\s+[^(=]+\s*\{)'
       push:
         - meta_scope: meta.property.source.cs
         - match: "}"
@@ -223,16 +253,19 @@ contexts:
             0: punctuation.section.property.end.source.cs
           pop: true
         - include: storage-modifiers
-        - match: '([\w.]+)\s*(?={)'
+        - match: '([\w.]+)(<(.+)>)*\s([\w.]+)\s*(?={)'
           captures:
-            1: entity.name.function.source.cs
+            1: entity.name.class.source.cs
+            3: support.class.source.cs
+            4: entity.name.function.source.cs
           push:
             - meta_scope: meta.method.identifier.source.cs
+            - include: genericParameters
             - match: "(?={)"
               pop: true
         - match: '(?=\w.*\s+[\w.]+\s*\{)'
           push:
-            - meta_scope: meta.method.return-type.source.cs
+            - meta_scope: meta.property.name.source.cs
             - match: '(?=[\w.]+\s*\{)'
               pop: true
             - include: builtinTypes
@@ -245,7 +278,7 @@ contexts:
               pop: true
             - include: code
   method-call:
-    - match: '([\w$]+)(<(.+)>)*(\(|{)'
+    - match: '([\w$]+)(<(.+?)>)*(\(|{)'
       captures:
         1: support.function.source.cs
         3: support.class.source.cs
@@ -260,18 +293,20 @@ contexts:
           scope: punctuation.definition.seperator.parameter.source.cs
         - include: code
   variable-define:
-    - match: '(?!float|var|event|delegate|add|remove|set|get|value|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|class|struct|enum|interface)([\w_]+)(<(.+)>)*\s+([\w_]+)\s*(;|=)'
+    - match: '(?!float|var|event|delegate|add|remove|set|get|value|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|class|struct|enum|interface)([\w_]+)(<(.+?)>)*(\[,*\])*\s+([\w_]+)\s*(;|=)'
       scope: punctuation.definition.variable.parameter.source.cs
       captures:
         1: support.class.source.cs
         3: entity.name.class.source.cs
   parameters:
-    - match: '\b(ref|params|out)?\s*\b([\w.\[\]<>]+)\s+(\w+)\s*(=)?'
+    - include: genericParameters
+    - match: '\b(ref|params|out)?\s*\b([\w.\[\]]+)(<(.+?)>)*\s+(\w+)\s*(=)?'
       captures:
         1: storage.type.modifier.source.cs
         2: support.class.source.cs
-        3: variable.parameter.function.source.cs
-        4: keyword.operator.assignment.source.cs
+        4: entity.name.class.source.cs
+        5: variable.parameter.function.source.cs
+        6: keyword.operator.assignment.source.cs
       push:
         - match: '(?:(,)|(?=[\)]))'
           captures:
